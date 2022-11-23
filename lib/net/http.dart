@@ -2,12 +2,11 @@ import 'dart:io';
 
 import 'package:dio/adapter.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
-import 'package:fluttertoast/fluttertoast.dart';
 import 'package:srbg/utils/Log.dart';
 import 'package:srbg/net/result_data.dart';
 import 'package:srbg/utils/SpUtils.dart';
+import 'package:srbg/utils/toast.dart';
 
 import 'address.dart';
 
@@ -63,7 +62,7 @@ class HttpManager {
             return handler.next(options);
           });
         } else {
-          Fluttertoast.showToast(msg: '没有token', backgroundColor: Colors.white70,textColor: Colors.black);
+          Toast.toast('暂无token');
           options.headers['token'] = token;
           return handler.next(options);
         }
@@ -72,6 +71,7 @@ class HttpManager {
         Log.e('assassinsSet');
         return handler.next(response);
       }, onError: (DioError e, handler) {
+        Toast.toast(e.message);
         return handler.next(e);
       }));
       _dio?.interceptors.add(LogInterceptor(requestBody: true));

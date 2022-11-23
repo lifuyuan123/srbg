@@ -1,9 +1,8 @@
 import 'dart:io';
-
 import 'package:flutter/material.dart';
-import 'package:english_words/english_words.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
+import 'package:srbg/pages/test1.dart';
 import 'package:srbg/utils/CustomRoute.dart';
 import 'package:srbg/net/Api.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -22,11 +21,11 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     if (Platform.isAndroid) {
       SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent, //设置状态栏颜色
-          statusBarBrightness: Brightness.light //设置沉浸式第一步
-          ));
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual);
+        statusBarColor: Colors.transparent, //设置状态栏颜色
+        statusBarIconBrightness: Brightness.dark,
+      ));
     }
+    final easyload = EasyLoading.init(); //加载框
 
     return ScreenUtilInit(
         designSize: const Size(375, 812),
@@ -34,21 +33,38 @@ class MyApp extends StatelessWidget {
         splitScreenMode: true,
         builder: (context, child) {
           return MaterialApp(
-            title: 'Startup Name Generator',
-            routes: <String,WidgetBuilder>{
-              'login':(context) => const LoginPage()
-            },
-            theme: ThemeData(
-              primarySwatch: Colors.blue,
-            ),
-            home: const Scaffold(
-              body: Center(
-                child: RandomWords(),
+              routes: <String, WidgetBuilder>{
+                'login': (context) => const LoginPage()
+              },
+              theme: ThemeData(
+                primarySwatch: Colors.blue,
               ),
-            ),
-            builder: EasyLoading.init(), //初始化加载框
-          );
+              home: const Scaffold(
+                body: Center(
+                  child: RandomWords(),
+                ),
+              ),
+              builder: (context, child) {
+                child = easyload(context, child); //初始化加载框
+                child = Scaffold(
+                  body: GestureDetector(
+                      //手势操作widget
+                      onTap: () {
+                        hideKeyboard(context); //全局处理软键盘
+                      },
+                      child: child),
+                );
+                return child;
+              });
         });
+  }
+}
+
+///隐藏软键盘
+void hideKeyboard(BuildContext context) {
+  FocusScopeNode focus = FocusScope.of(context);
+  if (!focus.hasPrimaryFocus && focus.focusedChild != null) {
+    FocusManager.instance.primaryFocus?.unfocus();
   }
 }
 
@@ -60,16 +76,13 @@ class RandomWords extends StatefulWidget {
 }
 
 class _RandomWordsState extends State<RandomWords> {
-  final _suggestions = <WordPair>[];
-  final _saved = <WordPair>{};
-  final _biggerFont = const TextStyle(fontSize: 18);
-
   late Future<Album> futureAlbum;
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
+
+    ///网络请求
     futureAlbum = fetchAlbum();
   }
 
@@ -77,58 +90,8 @@ class _RandomWordsState extends State<RandomWords> {
   void _pushSaved() {
     // Navigator.of(context).push(CustomRouteSlide(_collectWidget())
     Navigator.of(context).push(CustomRouteSlide(const LoginPage()));
-        // MaterialPageRoute<void>(
-        //   builder: (BuildContext context) {
-        //     final Iterable<ListTile> tiles = _saved.map(
-        //       (WordPair pair) {
-        //         return ListTile(
-        //           title: Text(
-        //             pair.asPascalCase,
-        //             style: _biggerFont,
-        //           ),
-        //         );
-        //       },
-        //     );
-        //     final List<Widget> divided = ListTile.divideTiles(
-        //       context: context,
-        //       tiles: tiles,
-        //     ).toList();
-        //
-        //     return Scaffold(
-        //       //搜藏页面
-        //       // 新增 6 行代码开始 ...
-        //       appBar: AppBar(
-        //         title: const Text('Saved Suggestions'),
-        //       ),
-        //       body: ListView(children: divided),
-        //     );
-        //   }
-        // ),
-        // );
-  }
-
-  Widget _collectWidget() {
-    final Iterable<ListTile> tiles = _saved.map(
-      (WordPair pair) {
-        return ListTile(
-          title: Text(
-            pair.asPascalCase,
-            style: _biggerFont,
-          ),
-        );
-      },
-    );
-    final List<Widget> divided = ListTile.divideTiles(
-      context: context,
-      tiles: tiles,
-    ).toList();
-
-    return Scaffold(
-      appBar: AppBar(title: const Text('collect')),
-      //搜藏页面
-      // 新增 6 行代码开始 ...
-      body: ListView(children: divided),
-    );
+    //跳转页面
+    // Navigator.of(context).push(CustomRouteSlide(const Test1()));
   }
 
   @override
@@ -136,29 +99,18 @@ class _RandomWordsState extends State<RandomWords> {
     return _pushWidget();
   }
 
+  ///网络请求数据
   Widget _pushWidget() {
     return Scaffold(
         appBar: AppBar(
           title: const Text('Startup Name Generator'),
-          // systemOverlayStyle: SystemUiOverlayStyle.dark, //状态栏字体颜色
+          systemOverlayStyle: SystemUiOverlayStyle.dark, //状态栏字体颜色
           actions: <Widget>[
             IconButton(icon: const Icon(Icons.list), onPressed: _pushSaved),
           ],
         ),
-        body:
-            // ListView.builder(
-            //   //列表
-            //   padding: const EdgeInsets.all(16.0),
-            //   itemBuilder: (context, i) {
-            //     if (i.isOdd) return const Divider();
-            //     final index = i ~/ 2;
-            //     if (index >= _suggestions.length) {
-            //       _suggestions.addAll(generateWordPairs().take(10));
-            //     }
-            //     return _buildRow(_suggestions[index]);
-            //   },
-            // ),
-            Center(
+        body: Center(
+          ///处理网络数据
           child: FutureBuilder<Album>(
             future: futureAlbum,
             builder: (context, snapshot) {
@@ -172,29 +124,5 @@ class _RandomWordsState extends State<RandomWords> {
             },
           ),
         ));
-  }
-
-  Widget _buildRow(WordPair pair) {
-    final bool alreadySaved = _saved.contains(pair);
-
-    return ListTile(
-      title: Text(
-        pair.asPascalCase,
-        style: _biggerFont,
-      ),
-      trailing: Icon(
-        alreadySaved ? Icons.favorite : Icons.favorite_border,
-        color: alreadySaved ? Colors.red : null,
-      ),
-      onTap: () {
-        setState(() {
-          if (alreadySaved) {
-            _saved.remove(pair);
-          } else {
-            _saved.add(pair);
-          }
-        });
-      },
-    );
   }
 }
