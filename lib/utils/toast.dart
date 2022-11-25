@@ -5,4 +5,8 @@ class Toast{
   static void toast(String msg){
     Fluttertoast.showToast(msg: msg, backgroundColor: Colors.white70,textColor: Colors.black);
   }
+
+  static void cancel(){
+    Fluttertoast.cancel();
+  }
 }

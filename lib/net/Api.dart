@@ -1,17 +1,10 @@
 
-import 'package:srbg/entry/Album.dart';
-import 'package:srbg/net/address.dart';
-import 'package:srbg/net/result_data.dart';
-import '../utils/Log.dart';
-import 'http.dart';
 
-Future<Album> fetchAlbum() async {
+class Api{
 
-  final ResultData data = await HttpManager().get(Address.TEST_API,isLoading: true);
-  if (data.isSuccess) {
-    Log.v(data.data);
-    return Album.fromJson(data.data);
-  } else {
-    throw Exception('Failed to load album');
-  }
+  //域名、ip
+  static String BASE_URL = "http://20.20.20.4:8762";
+
+  //接口
+  static String login ="/sys/login";
 }

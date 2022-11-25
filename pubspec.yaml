@@ -50,7 +50,12 @@ dependencies:
   shared_preferences: ^2.0.13
   #土司
   fluttertoast: ^8.1.1
-
+  #路由
+  go_router: ^5.2.0
+  #svg
+  flutter_svg: ^1.1.6
+  #MD5等加密
+  crypto: ^3.0.2
 
 dev_dependencies:
   flutter_test:
