@@ -34,7 +34,7 @@ class RandomWords extends StatefulWidget {
 
 class _RandomWordsState extends State<RandomWords> {
   // late Future<Album> futureAlbum;
-  DateTime _lastTime = DateTime.now();
+  DateTime? _lastTime;
   @override
   void initState() {
     super.initState();
@@ -70,8 +70,8 @@ class _RandomWordsState extends State<RandomWords> {
         ),
         body: WillPopScope(
             onWillPop: () async {
-              if (DateTime.now().difference(_lastTime) >
-                  const Duration(seconds: 2)) {
+              if (_lastTime==null||DateTime.now().difference(_lastTime!) >
+                  const Duration(seconds: 1)) {
                 _lastTime = DateTime.now();
                 Toast.toast('再点击一次退出app');
                 return false;
