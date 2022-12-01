@@ -4,14 +4,15 @@ import 'package:dio/dio.dart';
 import 'package:srbg/utils/Log.dart';
 import 'package:srbg/utils/SpUtils.dart';
 import 'package:srbg/utils/toast.dart';
-
+import '../pages/home.dart';
+import '../pages/login.dart';
+import '../utils/CustomRoute.dart';
 import '../utils/tags.dart';
 import 'Api.dart';
 
 class DioManager {
   static final DioManager instance = DioManager._internal();
   late Dio dio;
-  String? token;
 
   factory DioManager() => instance;
 
@@ -54,18 +55,25 @@ class DioManager {
     dio.interceptors.add(InterceptorsWrapper(
         // 如果你想完成请求并返回一些自定义数据，可以resolve 一个`Response`,如`handler.resolve(response)`。
         // 这样请求将会被终止，上层then会被调用，then中返回的数据将是你的自定义response.
-        onRequest: (options, handler) {
-      if (token == null || token!.isNotEmpty) {
-        SpUtils.getValue(Tags.TOKEN, "").then((value) {
-          options.headers[Tags.TOKEN] = token = value;
-          return handler.next(options);
-        });
-      } else {
-        options.headers[Tags.TOKEN] = token;
-        return handler.next(options);
-      }
+        onRequest: (options, handler) async {
+      final token = await SpUtils.getValue(Tags.TOKEN, "");
+      Log.e('初始化进入token--:$token');
+      options.headers['token'] = token;
+      return handler.next(options);
     }, onResponse: (response, handler) {
-      Log.e('token:$token');
+      //拦截token过期
+      final statusCode = response.statusCode;
+      if (statusCode != null && statusCode >= 200 && statusCode < 300) {
+        var code = response.data['code'];
+        //token过期
+        if (code == 2002 || code == 2000 || code == 2001 || code == 401) {
+          Future.delayed(const Duration(seconds: 0)).then((value) {
+            navigatorState.currentState
+                ?.push(CustomRouteSlide(const LoginPage()));
+          });
+        }
+      }
+
       return handler.next(response);
     }, onError: (DioError e, handler) {
       Toast.toast(e.message);

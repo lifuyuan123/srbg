@@ -47,7 +47,7 @@ dependencies:
   #日志库
   logger: ^1.0.0
   #轻量级储存库
-  shared_preferences: ^2.0.13
+  shared_preferences: ^2.0.15
   #土司
   fluttertoast: ^8.1.1
   #路由
@@ -56,6 +56,10 @@ dependencies:
   flutter_svg: ^1.1.6
   #MD5等加密
   crypto: ^3.0.2
+  #共享元素
+  provider: ^6.0.4
+  #抖动动画
+  shake_animation_widget: ^3.0.3
 
 dev_dependencies:
   flutter_test:

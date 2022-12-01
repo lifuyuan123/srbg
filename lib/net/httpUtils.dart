@@ -1,9 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:srbg/utils/Log.dart';
-import '../pages/home.dart';
-import '../pages/login.dart';
-import '../utils/CustomRoute.dart';
 import 'Api.dart';
 import 'dioManager.dart';
 
@@ -13,58 +10,18 @@ const String methodPut = 'put';
 
 ///网络统一请求工具
 class HttpUtil {
-  /// get 请求
-  static Future get(String path,
-      {Map<String, dynamic>? parmas,
-      String baseUrl = '',
-      bool isLoad = false,
-      Options? options,
-      CancelToken? cancelToken,
-      ProgressCallback? onReceiveProgress}) async {
-    return sendRequest(methodGet, path, baseUrl, parmas, isLoad, options,
-        cancelToken, onReceiveProgress);
-  }
-
-  /// post 请求
-  static Future post(
-    String path, {
-    Map<String, dynamic>? parmas,
-    String baseUrl = '',
-    bool isLoad = false,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onReceiveProgress,
-  }) {
-    return sendRequest(methodPost, path, baseUrl, parmas, isLoad, options,
-        cancelToken, onReceiveProgress);
-  }
-
-  /// post 请求
-  static Future put(
-    String path, {
-    Map<String, dynamic>? parmas,
-    String baseUrl = '',
-    bool isLoad = false,
-    Options? options,
-    CancelToken? cancelToken,
-    ProgressCallback? onReceiveProgress,
-  }) {
-    return sendRequest(methodPost, path, baseUrl, parmas, isLoad, options,
-        cancelToken, onReceiveProgress);
-  }
-
   ///统一发送请求预计返回值统一处理
   static Future sendRequest(
     String method,
-    String path,
-    String baseUrl,
+    String path, {
     Map<String, dynamic>? parmas,
-    bool isLoad,
+    String baseUrl = '',
+    bool isLoad = false,
     Options? options,
     CancelToken? cancelToken,
     ProgressCallback? onReceiveProgress,
-  ) async {
-    var dio = DioManager().dio;
+  }) async {
+    var dio = DioManager.instance.dio;
 
     //支持切换baseUrl
     if (!path.startsWith('http')) {
@@ -90,27 +47,12 @@ class HttpUtil {
         return {'code': -1, 'message': '', 'data': ''};
       }
       Log.v(rsp.data); //打印结果
-      return handleResponse(rsp);
+      return rsp.data;
     } catch (err) {
       if (isLoad) {
         EasyLoading.dismiss();
       }
       return handleException(err);
-    }
-  }
-
-  /// 统一处理解析数据
-  static dynamic handleResponse(Response response) {
-    if (isSuccess(response.statusCode)) {
-      var code = response.data['code'];
-      //token过期
-      if (code == 2002 || code == 2000 || code == 2001 || code == 401) {
-        Future.delayed(const Duration(seconds: 0)).then((value) {
-          navigatorState.currentState
-              ?.push(CustomRouteSlide(const LoginPage()));
-        });
-      }
-      response.data;
     }
   }
 

@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:shake_animation_widget/shake_animation_widget.dart';
 import 'package:srbg/utils/SpUtils.dart';
 import 'package:srbg/utils/tags.dart';
-import '../entry/user_bean_entity.dart';
+import 'package:srbg/utils/toast.dart';
 import '../net/service.dart';
+import '../notifier/userNotifier.dart';
 import '../utils/color.dart';
 
 ///登录
@@ -21,12 +25,22 @@ class _LoginPageState extends State<LoginPage> {
   bool isVisible = false;
   bool nameFocus = false;
   bool pswFocus = false;
-  final nameControl = TextEditingController();
-  final pswControl = TextEditingController();
+  bool canClick = false;
+  bool isError = false;
+  bool isFirst = true;
+
+  //控制器一定要放在外层，否则setState的时候触发build方法重构会使textfield值恢复默认值
+  TextEditingController nameControl = TextEditingController();
+  TextEditingController pswControl = TextEditingController();
+
+  final _shakeAnimationController = ShakeAnimationController();
+  final _shakeAgreeController = ShakeAnimationController();
+
+  var name = '';
+  var psw = '';
+
   FocusNode namefocusNode = FocusNode();
   FocusNode pswfocusNode = FocusNode();
-
-  // late Future<dynamic> login;
 
   @override
   void dispose() {
@@ -37,9 +51,30 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
-    // if (Platform.isAndroid) {//隐藏状态栏目
-    //   SystemChrome.setEnabledSystemUIMode(SystemUiMode.manual,overlays: []);
-    // }
+    final user = context.watch<UserNotifier>();
+
+    //填充账号密码  取默认值要注意死循环
+    // setState的时候触发build方法重构会使textfield值恢复默认值
+    // 错误写法 psw = user.userBeanData?.loginInfo?.psw ?? '';
+    name = isFirst ? user.userBeanData?.loginInfo?.userAccount ?? '' : name;
+    psw = isFirst ? user.userBeanData?.loginInfo?.psw ?? '' : psw;
+    isFirst = false;
+
+    //首次进入判断是否显示隐藏密码按钮
+    isVisible = psw.isNotEmpty;
+
+    ///控制下标和填入账号密码
+    nameControl.value = TextEditingValue(
+        text: name,
+        selection: TextSelection.fromPosition(TextPosition(
+            affinity: TextAffinity.upstream, offset: name.length)));
+
+    pswControl.value = TextEditingValue(
+        text: psw,
+        selection: TextSelection.fromPosition(
+            TextPosition(affinity: TextAffinity.upstream, offset: psw.length)));
+
+    ///控制焦点
     namefocusNode.addListener(() {
       setState(() {
         nameFocus = namefocusNode.hasFocus;
@@ -52,9 +87,52 @@ class _LoginPageState extends State<LoginPage> {
     });
 
     ///登录
-    void login() async {
-      var bean = await ServiceApi.login(nameControl.text, pswControl.text);
-      SpUtils.setValue(Tags.TOKEN, bean.data?.loginInfo?.token);
+    Future<bool> login() async {
+      if (canClick) {
+        var bean = await ServiceApi.login(name, psw);
+        //更新底部提示显示
+        setState(() {
+          isError = bean.code != 200;
+        });
+        if (bean.code == 200) {
+          Toast.toast('登录成功');
+          //更新本地用户数据
+          bean.data?.loginInfo?.psw = psw;
+          user.setUserBean(bean.data);
+          var userResult =
+              await SpUtils.setString(Tags.USER_BEAN, bean.data?.toString());
+          var tokenResult =
+              await SpUtils.setString(Tags.TOKEN, bean.data?.loginInfo?.token);
+          print('保存用户数据：user-$userResult   token-$tokenResult');
+
+          return true;
+        } else {
+          //判断抖动动画是否正在执行
+          if (_shakeAnimationController.animationRunging) {
+            _shakeAnimationController.stop();
+          } else {
+            //开启抖动动画
+            _shakeAnimationController.start(shakeCount: 1);
+          }
+        }
+      } else {
+        if (!isAgree && name.isNotEmpty && psw.isNotEmpty) {
+          if (_shakeAgreeController.animationRunging) {
+            _shakeAgreeController.stop();
+          } else {
+            //开启抖动动画
+            _shakeAgreeController.start(shakeCount: 1);
+          }
+        } else {
+          Toast.toast('请填写账号和密码');
+        }
+      }
+      return false;
+    }
+
+    ///检查是否可点击
+    void checkState() {
+      canClick = isAgree && name.isNotEmpty && psw.isNotEmpty;
     }
 
     return Container(
@@ -129,8 +207,14 @@ class _LoginPageState extends State<LoginPage> {
                                   child: TextField(
                                     keyboardType: TextInputType.text,
                                     obscureText: false,
-                                    //隐藏密码
                                     onChanged: (v) {
+                                      setState(() {
+                                        isError = false;
+                                      });
+                                      name = v;
+                                      setState(() {
+                                        checkState();
+                                      });
                                       print('onChage: ${nameControl.text}');
                                     },
                                     controller: nameControl,
@@ -180,12 +264,19 @@ class _LoginPageState extends State<LoginPage> {
                                   child: TextField(
                                     keyboardType: TextInputType.text,
                                     focusNode: pswfocusNode,
-                                    obscureText: isShowPsw,
+                                    obscureText: !isShowPsw,
                                     //隐藏密码
                                     onChanged: (v) {
                                       setState(() {
-                                        isVisible = pswControl.text.isNotEmpty;
+                                        isError = false;
                                       });
+                                      psw = v;
+                                      if (isVisible != v.isNotEmpty) {
+                                        setState(() {
+                                          isVisible = v.isNotEmpty;
+                                          checkState();
+                                        });
+                                      }
                                       print('onChage: ${pswControl.text}');
                                     },
                                     controller: pswControl,
@@ -204,19 +295,21 @@ class _LoginPageState extends State<LoginPage> {
                                         border: InputBorder.none),
                                   ),
                                 ),
-                                IconButton(
-                                    onPressed: () {
-                                      setState(() {
-                                        isShowPsw = !isShowPsw;
-                                      });
-                                    },
-                                    icon: SvgPicture.asset(
-                                      isShowPsw
-                                          ? 'assets/ic_psw_show.svg'
-                                          : 'assets/ic_psw_hide.svg',
-                                      width: isVisible ? 18.w : 0.w,
-                                      height: isVisible ? 13.w : 0.w,
-                                    ))
+                                Visibility(
+                                    visible: isVisible,
+                                    child: IconButton(
+                                        onPressed: () {
+                                          setState(() {
+                                            isShowPsw = !isShowPsw;
+                                          });
+                                        },
+                                        icon: SvgPicture.asset(
+                                          !isShowPsw
+                                              ? 'assets/ic_psw_show.svg'
+                                              : 'assets/ic_psw_hide.svg',
+                                          width: 18.w,
+                                          height: 13.w,
+                                        )))
                               ],
                             )),
                       ),
@@ -229,42 +322,87 @@ class _LoginPageState extends State<LoginPage> {
                           //点击确认条款
                           setState(() {
                             isAgree = !isAgree;
+                            checkState();
                           });
                         },
-                        child: Row(
-                          children: [
-                            StatefulBuilder(builder: (BuildContext context,
-                                void Function(void Function()) setState) {
-                              return SvgPicture.asset(
-                                  isAgree
-                                      ? 'assets/ic_tip_choice.svg'
-                                      : 'assets/ic_tip_unchoice.svg',
-                                  width: 16.w,
-                                  height: 16.w);
-                            }),
-                            SizedBox(
-                              width: 8.w,
-                            ),
-                            const DefaultTextStyle(
-                                style: TextStyle(
-                                    fontSize: 13, color: MyColors.color_5F5F5F),
-                                child: Text.rich(TextSpan(children: [
-                                  TextSpan(text: '我已同意并阅读'),
-                                  TextSpan(
-                                    text: '《用户协议》',
-                                    style:
-                                        TextStyle(color: MyColors.color_6975FF),
-                                  ),
-                                  TextSpan(text: '和'),
-                                  TextSpan(
-                                    text: '《隐私政策》',
-                                    style:
-                                        TextStyle(color: MyColors.color_6975FF),
-                                  ),
-                                ]))),
-                          ],
-                        ),
+                        child: ShakeAnimationWidget(
+                            //抖动控制器
+                            shakeAnimationController: _shakeAgreeController,
+                            //微旋转的抖动
+                            shakeAnimationType:
+                                ShakeAnimationType.LeftRightShake,
+                            //设置不开启抖动
+                            isForward: false,
+                            //默认为 0 无限执行
+                            shakeCount: 0,
+                            //抖动的幅度 取值范围为[0,1]
+                            shakeRange: 0.3,
+                            //执行抖动动画的子Widget
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.center,
+                              children: [
+                                StatefulBuilder(builder: (BuildContext context,
+                                    void Function(void Function()) setState) {
+                                  return SvgPicture.asset(
+                                      isAgree
+                                          ? 'assets/ic_tip_choice.svg'
+                                          : 'assets/ic_tip_unchoice.svg',
+                                      width: 16.w,
+                                      height: 16.w);
+                                }),
+                                SizedBox(
+                                  width: 8.w,
+                                ),
+                                const DefaultTextStyle(
+                                    style: TextStyle(
+                                        fontSize: 13,
+                                        color: MyColors.color_5F5F5F),
+                                    child: Text.rich(TextSpan(children: [
+                                      TextSpan(text: '我已同意并阅读'),
+                                      TextSpan(
+                                        text: '《用户协议》',
+                                        style: TextStyle(
+                                            color: MyColors.color_6975FF),
+                                      ),
+                                      TextSpan(text: '和'),
+                                      TextSpan(
+                                        text: '《隐私政策》',
+                                        style: TextStyle(
+                                            color: MyColors.color_6975FF),
+                                      ),
+                                    ]))),
+                              ],
+                            )),
                       ),
+                      Visibility(
+                          visible: isError,
+                          child: Padding(
+                            padding: EdgeInsets.only(top: 5.w),
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: ShakeAnimationWidget(
+                                //抖动控制器
+                                shakeAnimationController:
+                                    _shakeAnimationController,
+                                //微旋转的抖动
+                                shakeAnimationType:
+                                    ShakeAnimationType.LeftRightShake,
+                                //设置不开启抖动
+                                isForward: false,
+                                //默认为 0 无限执行
+                                shakeCount: 0,
+                                //抖动的幅度 取值范围为[0,1]
+                                shakeRange: 0.3,
+                                //执行抖动动画的子Widget
+                                child: const Text(
+                                  '账号或密码错误！',
+                                  style: TextStyle(
+                                      fontSize: 14,
+                                      color: MyColors.color_E8575A),
+                                ),
+                              ),
+                            ),
+                          )),
                       Padding(
                         padding: EdgeInsets.only(top: 50.w),
                         child: Container(
@@ -273,10 +411,28 @@ class _LoginPageState extends State<LoginPage> {
                           decoration: BoxDecoration(
                               // border: Border.all(color: MyColors.color_E1E1E1, width: 1.w),
                               borderRadius: BorderRadius.circular(30.w),
+                              gradient: LinearGradient(
+                                  begin: Alignment.centerLeft,
+                                  end: Alignment.centerRight,
+                                  colors: canClick
+                                      ? [
+                                          MyColors.color_6A79FF,
+                                          MyColors.color_5E6CF1
+                                        ]
+                                      : [
+                                          MyColors.color_C9C7C7,
+                                          MyColors.color_A4A2A2
+                                        ]),
                               color: MyColors.color_F8F8F8),
                           child: TextButton(
                             onPressed: () {
-                              login();
+                              login().then((value) {
+                                if (value) {
+                                  if (context.canPop()) {
+                                    context.pop();
+                                  }
+                                }
+                              });
                             },
                             style: ButtonStyle(overlayColor:
                                 MaterialStateProperty.resolveWith((states) {
@@ -285,7 +441,7 @@ class _LoginPageState extends State<LoginPage> {
                             child: const Text(
                               '登录',
                               style:
-                                  TextStyle(fontSize: 16, color: Colors.black),
+                                  TextStyle(fontSize: 16, color: Colors.white),
                             ),
                           ),
                         ),
@@ -296,8 +452,6 @@ class _LoginPageState extends State<LoginPage> {
               ],
             ),
           ),
-        )
-        // ),
-        );
+        ));
   }
 }

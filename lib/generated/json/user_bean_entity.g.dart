@@ -56,6 +56,10 @@ UserBeanDataLoginInfo $UserBeanDataLoginInfoFromJson(Map<String, dynamic> json) 
 	if (userAccount != null) {
 		userBeanDataLoginInfo.userAccount = userAccount;
 	}
+	final String? psw = jsonConvert.convert<String>(json['psw']);
+	if (psw != null) {
+		userBeanDataLoginInfo.psw = psw;
+	}
 	final String? userName = jsonConvert.convert<String>(json['userName']);
 	if (userName != null) {
 		userBeanDataLoginInfo.userName = userName;
@@ -95,6 +99,7 @@ Map<String, dynamic> $UserBeanDataLoginInfoToJson(UserBeanDataLoginInfo entity) 
 	final Map<String, dynamic> data = <String, dynamic>{};
 	data['userId'] = entity.userId;
 	data['userAccount'] = entity.userAccount;
+	data['psw'] = entity.psw;
 	data['userName'] = entity.userName;
 	data['roleId'] = entity.roleId;
 	data['roleLevel'] = entity.roleLevel;

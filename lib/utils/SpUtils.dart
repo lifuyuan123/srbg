@@ -1,17 +1,19 @@
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SpUtils {
-  static void setValue(String key, Object? value) {
+  static Future<bool> setValue(String key, Object? value) async{
     if (value is int) {
-      setInt(key, value);
+     return setInt(key, value);
     } else if (value is bool) {
-      setBool(key, value);
+     return setBool(key, value);
     } else if (value is double) {
-      setDouble(key, value);
+     return setDouble(key, value);
     } else if (value is String) {
-      setString(key, value);
+     return setString(key, value);
     } else if (value is List<String>) {
-      setStringList(key, value);
+     return setStringList(key, value);
+    }else{
+      return false;
     }
   }
 
@@ -29,9 +31,9 @@ class SpUtils {
     }
   }
 
-  static void setInt(String key, int? value, [int defaultValue = 0]) async {
+  static Future<bool> setInt(String key, int? value, [int defaultValue = 0]) async {
     var sp = await SharedPreferences.getInstance();
-    sp.setInt(key, value ?? defaultValue);
+   return sp.setInt(key, value ?? defaultValue);
   }
 
   static Future<int> getInt(String key, [int defaultValue = 0]) async {

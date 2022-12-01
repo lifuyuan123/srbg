@@ -44,6 +44,7 @@ class UserBeanDataLoginInfo {
 
 	int? userId;
 	String? userAccount;
+	String? psw;
 	String? userName;
 	int? roleId;
 	int? roleLevel;
