@@ -6,8 +6,8 @@ import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:provider/provider.dart';
 import 'package:srbg/notifier/userNotifier.dart';
+import 'package:srbg/utils/NoSplashFactory.dart';
 import 'package:srbg/utils/SpUtils.dart';
-import 'package:srbg/utils/color.dart';
 import 'package:srbg/utils/routers.dart';
 import 'package:srbg/utils/tags.dart';
 import 'entry/user_bean_entity.dart';
@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     if (Platform.isAndroid) {
       SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-        statusBarColor: Colors.white, //设置状态栏颜色
+        statusBarColor: Colors.transparent, //设置状态栏颜色
         statusBarIconBrightness: Brightness.dark,
       ));
     }
@@ -51,10 +51,13 @@ class MyApp extends StatelessWidget {
         splitScreenMode: true,
         builder: (context, child) {
           return MaterialApp.router(
-            routerConfig: goRouter,
+              routerConfig: goRouter,
               theme: ThemeData(
-                primarySwatch: Colors.blue, primaryColor: Colors.white
-              ),
+                  splashColor: Colors.transparent,
+                  highlightColor: Colors.transparent,
+                  splashFactory: NoSplashFactory(),
+                  primarySwatch: Colors.blue,
+                  primaryColor: Colors.white),
               builder: (context, child) {
                 child = easyload(context, child); //初始化加载框
                 child = Scaffold(

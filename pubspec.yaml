@@ -60,6 +60,8 @@ dependencies:
   provider: ^6.0.4
   #抖动动画
   shake_animation_widget: ^3.0.3
+  #外部浏览器
+  url_launcher: ^6.1.7
 
 dev_dependencies:
   flutter_test:

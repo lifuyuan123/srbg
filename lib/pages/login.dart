@@ -1,4 +1,8 @@
+import 'dart:io';
+
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -7,6 +11,7 @@ import 'package:shake_animation_widget/shake_animation_widget.dart';
 import 'package:srbg/utils/SpUtils.dart';
 import 'package:srbg/utils/tags.dart';
 import 'package:srbg/utils/toast.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../net/service.dart';
 import '../notifier/userNotifier.dart';
 import '../utils/color.dart';
@@ -135,6 +140,13 @@ class _LoginPageState extends State<LoginPage> {
       canClick = isAgree && name.isNotEmpty && psw.isNotEmpty;
     }
 
+    if (Platform.isAndroid) {
+      SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent, //设置状态栏颜色
+        statusBarIconBrightness: Brightness.dark,
+      ));
+    }
+
     return Container(
         decoration: const BoxDecoration(
             image: DecorationImage(
@@ -146,6 +158,7 @@ class _LoginPageState extends State<LoginPage> {
           width: double.infinity,
           child: Center(
             child: ListView(
+              physics: const BouncingScrollPhysics(),
               shrinkWrap: true,
               children: [
                 Row(
@@ -353,21 +366,37 @@ class _LoginPageState extends State<LoginPage> {
                                 SizedBox(
                                   width: 8.w,
                                 ),
-                                const DefaultTextStyle(
-                                    style: TextStyle(
+                                DefaultTextStyle(
+                                    style: const TextStyle(
                                         fontSize: 13,
                                         color: MyColors.color_5F5F5F),
                                     child: Text.rich(TextSpan(children: [
-                                      TextSpan(text: '我已同意并阅读'),
+                                      const TextSpan(text: '我已同意并阅读'),
                                       TextSpan(
                                         text: '《用户协议》',
-                                        style: TextStyle(
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () async {
+                                            final _url = Uri.parse(
+                                                "https://lbs.amap.com/pages/privacy/");
+                                            if (!await launchUrl(_url)) {
+                                              throw 'Could not launch $_url';
+                                            }
+                                          },
+                                        style: const TextStyle(
                                             color: MyColors.color_6975FF),
                                       ),
-                                      TextSpan(text: '和'),
+                                      const TextSpan(text: '和'),
                                       TextSpan(
                                         text: '《隐私政策》',
-                                        style: TextStyle(
+                                        recognizer: TapGestureRecognizer()
+                                          ..onTap = () async {
+                                            final _url = Uri.parse(
+                                                "https://www.jiguang.cn/license/privacy");
+                                            if (!await launchUrl(_url)) {
+                                              throw 'Could not launch $_url';
+                                            }
+                                          },
+                                        style: const TextStyle(
                                             color: MyColors.color_6975FF),
                                       ),
                                     ]))),

@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import '../utils/NoShadowScrollBehavior.dart';
+
 class Test1 extends StatefulWidget {
   const Test1({Key? key}) : super(key: key);
 
   @override
   State<Test1> createState() => _Test1State();
-
 }
 
 var color;
@@ -15,17 +16,20 @@ class _Test1State extends State<Test1> {
   @override
   Widget build(BuildContext context) {
     color = Theme.of(context).primaryColor;
-    return ListView(
-      children: [
-        //头部图片
-        Image.asset('assets/ic_logo.png', fit: BoxFit.cover),
-        //标题
-        titleSection,
-        //中间按钮
-        buttonSection,
-        //底部文字
-        textSection
-      ],
+    return ScrollConfiguration(
+      behavior: NoShadowScrollBehavior(),
+      child: ListView(
+        children: [
+          //头部图片
+          Image.asset('assets/ic_logo.png', fit: BoxFit.cover),
+          //标题
+          titleSection,
+          //中间按钮
+          buttonSection,
+          //底部文字
+          textSection
+        ],
+      ),
     );
   }
 }
