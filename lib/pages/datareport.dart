@@ -93,6 +93,7 @@ class _DateReportPageState extends State<DateReportPage> {
           color: colorbg, borderRadius: BorderRadius.circular(10.w)),
       child: GestureDetector(
         onTap: () {
+          Toast.toast(name);
           switch (i) {
             case 0:
               break;
@@ -105,7 +106,6 @@ class _DateReportPageState extends State<DateReportPage> {
             case 4:
               break;
           }
-          Toast.toast(name);
         },
         child: Stack(
           alignment: Alignment.topRight,

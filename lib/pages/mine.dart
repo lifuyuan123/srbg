@@ -49,6 +49,7 @@ class _MinePageState extends State<MinePage> {
                     child: Row(
                       children: [
                         Container(
+                          margin: EdgeInsets.only(right: 20.w),
                           width: 60.w,
                           height: 60.w,
                           decoration: BoxDecoration(
@@ -60,40 +61,35 @@ class _MinePageState extends State<MinePage> {
                               ),
                               borderRadius: BorderRadius.circular(30.w)),
                         ),
-                        SizedBox(
-                          width: 20.w,
-                        ),
-                        SizedBox(
-                          height: 60.w,
-                          child: Expanded(
+                        Expanded(
+                          child: SizedBox(
+                              height: 60.w,
                               child: Column(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Consumer<UserNotifier>(
-                                  builder: (context, user, child) {
-                                return
-                                  Text(
-                                    '${user.userBeanData?.loginInfo?.userAccount}',
-                                    style: const TextStyle(
-                                        color: MyColors.color_2C2C2C,
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold)
-                                  );
-                              }),
-                              SizedBox(
-                                height: 2.w,
-                              ),
-                              Consumer<UserNotifier>(
-                                  builder: (context, user, child) {
-                                return Text(
-                                    '${user.userBeanData?.loginInfo?.userName}',
-                                    style: const TextStyle(
-                                        color: MyColors.color_5F5F5F,
-                                        fontSize: 14));
-                              }),
-                            ],
-                          )),
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Consumer<UserNotifier>(
+                                      builder: (context, user, child) {
+                                    return Text(
+                                        '${user.userBeanData?.loginInfo?.userAccount}',
+                                        style: const TextStyle(
+                                            color: MyColors.color_2C2C2C,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold));
+                                  }),
+                                  SizedBox(
+                                    height: 2.w,
+                                  ),
+                                  Consumer<UserNotifier>(
+                                      builder: (context, user, child) {
+                                    return Text(
+                                        '${user.userBeanData?.loginInfo?.userName}',
+                                        style: const TextStyle(
+                                            color: MyColors.color_5F5F5F,
+                                            fontSize: 14));
+                                  }),
+                                ],
+                              )),
                         )
                       ],
                     ),
