@@ -43,6 +43,8 @@ class _LoginPageState extends State<LoginPage> {
 
   var name = '';
   var psw = '';
+  var oldname = '';
+  var oldpsw = '';
 
   FocusNode namefocusNode = FocusNode();
   FocusNode pswfocusNode = FocusNode();
@@ -63,6 +65,9 @@ class _LoginPageState extends State<LoginPage> {
     // 错误写法 psw = user.userBeanData?.loginInfo?.psw ?? '';
     name = isFirst ? user.userBeanData?.loginInfo?.userAccount ?? '' : name;
     psw = isFirst ? user.userBeanData?.loginInfo?.psw ?? '' : psw;
+    oldname =
+        isFirst ? user.userBeanData?.loginInfo?.userAccount ?? '' : oldname;
+    oldpsw = isFirst ? user.userBeanData?.loginInfo?.psw ?? '' : oldpsw;
     isFirst = false;
 
     //首次进入判断是否显示隐藏密码按钮
@@ -72,12 +77,14 @@ class _LoginPageState extends State<LoginPage> {
     nameControl.value = TextEditingValue(
         text: name,
         selection: TextSelection.fromPosition(TextPosition(
-            affinity: TextAffinity.upstream, offset: name.length)));
+            affinity: TextAffinity.downstream,
+            offset: _chatIndex(name, oldname))));
 
     pswControl.value = TextEditingValue(
         text: psw,
-        selection: TextSelection.fromPosition(
-            TextPosition(affinity: TextAffinity.upstream, offset: psw.length)));
+        selection: TextSelection.fromPosition(TextPosition(
+            affinity: TextAffinity.downstream,
+            offset: _chatIndex(psw, oldpsw))));
 
     ///控制焦点
     namefocusNode.addListener(() {
@@ -224,6 +231,7 @@ class _LoginPageState extends State<LoginPage> {
                                       setState(() {
                                         isError = false;
                                       });
+                                      oldname = name;
                                       name = v;
                                       setState(() {
                                         checkState();
@@ -283,6 +291,7 @@ class _LoginPageState extends State<LoginPage> {
                                       setState(() {
                                         isError = false;
                                       });
+                                      oldpsw = psw;
                                       psw = v;
                                       if (isVisible != v.isNotEmpty) {
                                         setState(() {
@@ -459,7 +468,7 @@ class _LoginPageState extends State<LoginPage> {
                                 if (value) {
                                   if (context.canPop()) {
                                     context.pop();
-                                  }else{
+                                  } else {
                                     context.push('/');
                                     context.pop();
                                   }
@@ -485,5 +494,19 @@ class _LoginPageState extends State<LoginPage> {
             ),
           ),
         ));
+  }
+
+  //记录下标位置
+  int _chatIndex(String str, String oldStr) {
+    final isAdd = str.length > oldStr.length;
+    var len = isAdd ? oldStr.length : str.length;
+    final chars = str.characters;
+    final oldchars = oldStr.characters;
+    for (int i = 0; i < len; i++) {
+      if (oldchars.characterAt(i).string != chars.characterAt(i).string) {
+        return isAdd ? i + 1 : i;
+      }
+    }
+    return str.length;
   }
 }

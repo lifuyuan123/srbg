@@ -100,7 +100,7 @@ class _HomePageState extends State<HomePage> {
             items: [
               bottomItem('首页', 'assets/ic_home.svg', 0, _index),
               bottomItem('数据上报', 'assets/ic_datareport.svg', 1, _index),
-              bottomItem('我的', 'assets/ic_personal.svg', 2, _index),
+              bottomItem('个人中心', 'assets/ic_personal.svg', 2, _index),
             ],
             type: BottomNavigationBarType.fixed, // 设置未选中也能显示标题
           ),
@@ -114,11 +114,14 @@ class _HomePageState extends State<HomePage> {
 BottomNavigationBarItem bottomItem(
     String name, String icon, int index, int choiceIndex) {
   return BottomNavigationBarItem(
-      icon: SvgPicture.asset(icon,
-          color: choiceIndex == index
-              ? MyColors.color_6A79FF
-              : MyColors.color_9E9E9E,
-          width: 19.w,
-          height: 19.w),
+      icon: Padding(
+        padding: EdgeInsets.only(bottom: 2.w),//图标文字间距
+        child:SvgPicture.asset(icon,
+            color: choiceIndex == index
+                ? MyColors.color_6A79FF
+                : MyColors.color_9E9E9E,
+            width: 19.w,
+            height: 19.w),
+      ),
       label: name);
 }
